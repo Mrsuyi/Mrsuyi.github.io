@@ -41,7 +41,7 @@
 <link href="/css/main.css?v=0.5.0" rel="stylesheet" type="text/css" />
 
 
-  <meta name="keywords" content="Hexo, NexT" />
+  <meta name="keywords" content="LeetCode,Number," />
 
 
 
@@ -57,16 +57,19 @@
 
 
 
-<meta name="description" content="╮(╯▽╰)╭">
+<meta name="description" content="题目地址 https://leetcode.com/problems/perfect-squares/
+完美平方数。又是一道神奇的数论题目。。">
 <meta property="og:type" content="article">
-<meta property="og:title" content="leetcode-279">
+<meta property="og:title" content="leetcode-279 perfect-squares">
 <meta property="og:url" content="http://mrsuyi.com/2016/03/16/leetcode-279/index.html">
 <meta property="og:site_name" content="Mrsuyi">
-<meta property="og:description" content="╮(╯▽╰)╭">
-<meta property="og:updated_time" content="2016-03-16T03:01:30.811Z">
+<meta property="og:description" content="题目地址 https://leetcode.com/problems/perfect-squares/
+完美平方数。又是一道神奇的数论题目。。">
+<meta property="og:updated_time" content="2016-03-17T09:19:53.118Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="leetcode-279">
-<meta name="twitter:description" content="╮(╯▽╰)╭">
+<meta name="twitter:title" content="leetcode-279 perfect-squares">
+<meta name="twitter:description" content="题目地址 https://leetcode.com/problems/perfect-squares/
+完美平方数。又是一道神奇的数论题目。。">
 
 
 
@@ -84,7 +87,7 @@
   };
 </script>
 
-  <title> leetcode-279 | Mrsuyi </title>
+  <title> leetcode-279 perfect-squares | Mrsuyi </title>
 </head>
 
 <body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
@@ -145,6 +148,16 @@
         </li>
       
         
+        <li class="menu-item menu-item-categories">
+          <a href="/categories" rel="section">
+            
+              <i class="menu-item-icon fa fa-th fa-fw"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
         <li class="menu-item menu-item-archives">
           <a href="/archives" rel="section">
             
@@ -161,6 +174,16 @@
               <i class="menu-item-icon fa fa-tags fa-fw"></i> <br />
             
             标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-leetcode">
+          <a href="/leetcode" rel="section">
+            
+              <i class="menu-item-icon fa fa-list fa-fw"></i> <br />
+            
+            LeetCode
           </a>
         </li>
       
@@ -204,7 +227,7 @@
             
             
               
-                leetcode-279
+                leetcode-279 perfect-squares
               
             
           </h1>
@@ -221,6 +244,25 @@
             </time>
           </span>
 
+          
+            <span class="post-category" >
+              &nbsp; | &nbsp;
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="https://schema.org/Thing">
+                  <a href="/categories/LeetCode/" itemprop="url" rel="index">
+                    <span itemprop="name">LeetCode</span>
+                  </a>
+                </span>
+
+                
+                
+
+              
+            </span>
           
 
           
@@ -249,11 +291,22 @@
       
 
       
-        
+        <p>题目地址 <a href="https://leetcode.com/problems/perfect-squares/" target="_blank" rel="external">https://leetcode.com/problems/perfect-squares/</a></p>
+<p>完美平方数。又是一道神奇的数论题目。。</p>
+<a id="more"></a>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">class</span> Solution</span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="function"><span class="keyword">int</span> <span class="title">numSquares</span><span class="params">(<span class="keyword">int</span> n)</span></span><br><span class="line">    </span>&#123;</span><br><span class="line">        <span class="keyword">while</span> (n % <span class="number">4</span> == <span class="number">0</span>) n /= <span class="number">4</span>;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (n % <span class="number">8</span> == <span class="number">7</span>) <span class="keyword">return</span> <span class="number">4</span>;</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> a = <span class="number">0</span>; a * a &lt;= n; a++)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">int</span> b = <span class="built_in">sqrt</span>(n - a * a);</span><br><span class="line">            <span class="keyword">if</span> (a * a + b * b == n)</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="keyword">return</span> !!a + !!b;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="number">3</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
       
     </div>
 
     <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/LeetCode/" rel="tag">#LeetCode</a>
+          
+            <a href="/tags/Number/" rel="tag">#Number</a>
+          
+        </div>
       
 
       
@@ -267,6 +320,10 @@
           </div>
 
           <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2016/03/17/leetcode-282/" rel="prev" title="leetcode-282 expression-add-operators">
+                leetcode-282 expression-add-operators <i class="fa fa-chevron-right"></i>
+              </a>
             
           </div>
         </div>
@@ -293,7 +350,7 @@
   <div class="comments" id="comments">
     
       <div class="ds-thread" data-thread-key="2016/03/16/leetcode-279/"
-           data-title="leetcode-279" data-url="http://mrsuyi.com/2016/03/16/leetcode-279/">
+           data-title="leetcode-279 perfect-squares" data-url="http://mrsuyi.com/2016/03/16/leetcode-279/">
       </div>
     
   </div>
@@ -338,17 +395,17 @@
         <nav class="site-state motion-element">
           <div class="site-state-item site-state-posts">
             <a href="/archives">
-              <span class="site-state-item-count">231</span>
+              <span class="site-state-item-count">234</span>
               <span class="site-state-item-name">日志</span>
             </a>
           </div>
           
           
             <div class="site-state-item site-state-categories">
-              
+              <a href="/categories">
                 <span class="site-state-item-count">2</span>
                 <span class="site-state-item-name">分类</span>
-              
+              </a>
             </div>
           
 
