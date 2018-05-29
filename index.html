@@ -1,81 +1,14 @@
 <html>
 <head>
-  <link rel="stylesheet" href="http://cdn.bootcss.com/bootstrap/3.3.5/css/bootstrap.min.css">
-  <script src="http://cdn.bootcss.com/jquery/3.1.0/jquery.min.js"></script>
-  <script src="http://cdn.bootcss.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
-  <script type="text/javascript">
-      
-function resize(el, diff)
-{
-    var style = window.getComputedStyle(el, null).getPropertyValue('font-size');
-    var fontSize = parseFloat(style);
-    el.style.fontSize = (fontSize + diff) + 'px';
-    return el.style.fontSize;
-  // var children = el.childNodes;
-  // for (var i = 0; i < children.length; ++i)
-  //   if (children[i] instanceof Element)
-  //       resize(children[i], diff);
-}
-
-$(document).ready(() =>
-{
-    $("button#add").click(() =>
-    {
-        let diff = parseInt($("input#diff").val());
-        $("td.word").each(function()
-        {
-            $(this).next().text(resize(this, diff));
-        });
-    });
-    $("button#dec").click(() =>
-    {
-        let diff = parseInt($("input#diff").val());
-        $("td.word").each(function()
-        {
-            $(this).next().text(resize(this, -1 * diff));
-        });
-    });
-    $("button#reload").click(() =>
-    {
-        window.location.reload();
-    });
-
-    $("td.word").each(function()
-    {
-        $(this).next().text(resize(this, 0));
-    });
-});
-
-  </script>
 </head>
 <body>
-    <input id="diff" type="number" value=1>
-    <button id="add">+</button>
-    <button id="dec">-</button>
-    <br>
-    <table>
-        <tr>
-            <td class="word">default</td>
-            <td></td>
-        </tr>
-        <tr>
-            <td class="word" style="font-size:20px;">20px</td>
-            <td></td>
-        </tr>
-        <tr>
-            <td class="word" style="font-size:18pt;">18pt</td>
-            <td></td>
-        </tr>
-        <tr>
-            <td class="word" style="font-size:1.5em">1.5em</td>
-            <td></td>
-        </tr>
-        <tr>
-            <td class="word" style="font-size:2.0rem">2.0rem</td>
-            <td></td>
-        </tr>
-    </table>
-    <button id="reload">reload</button>
+
+<span style="font-size: 20px">px</span>
+<span style="font-size: 26pt">pt</span>
+<span style="font-size: 80%">%%%</span>
+<span style="font-size: 1.5em">em</span>
+<span style="font-size: 1.5rem">rem</span>
+
 </body>
 </html>
 
