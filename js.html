@@ -1,0 +1,28 @@
+<html>
+  <head>
+  </head>
+  <body>
+    <h2>Test form</h2>
+    <form id="f" action="./index.html?abc=123" method="get">
+      <input id="i1" type="search" name="i1">
+      <input id="btn1" type="submit" name="btn1">
+    </form>
+    <br>
+    <br>
+    <h2>Test Js popup panels</h2>
+    <button onclick="alert('alert');">alert</button>
+    <br>
+    <button onclick="document.getElementById('confirm-res').textContent = confirm('confirm');">confirm</button><span id="confirm-res"></span>
+    <br>
+    <button onclick="document.getElementById('prompt-res').textContent = prompt('prompt', 'default');">prompt</button><span id="prompt-res"></span>
+    <br>
+    <br>
+    <h2>Test window.history and hash<h2>
+        <button onclick="window.location.hash='shit';">hash='shit'</button></span>
+      <br>
+      <button onclick="window.history.pushState(null, '', 'index.html?action=pushState');">pushState</button></span>
+    <br>
+    <button onclick="window.history.replaceState(null, '', 'index.html?action=replaceState');">replaceState</button></span>
+  </body>
+</html>
+

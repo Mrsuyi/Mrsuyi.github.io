@@ -1,38 +1,59 @@
 <html>
-<head>
-  <script type="text/javascript">
-  </script>
-</head>
-<body>
-  <h1><a href='index.html'>This is Mrsuyi's test site</a></h1>
-  <br>
-  <br>
-  <a href="img.html">Images</a>
-  <br>
-  <br>
-  <a href="video.html">Videos</a>
-  <br>
-  <br>
-  <h2>Test form</h2>
-  <form id="f" action="./index.html?abc=123" method="get">
-    <input id="i1" type="search" name="i1">
-    <input id="btn1" type="submit" name="btn1">
-  </form>
-  <br>
-  <br>
-  <h2>Test Js popup panels</h2>
-  <button onclick="alert('alert');">alert</button>
-  <br>
-  <button onclick="document.getElementById('confirm-res').textContent = confirm('confirm');">confirm</button><span id="confirm-res"></span>
-  <br>
-  <button onclick="document.getElementById('prompt-res').textContent = prompt('prompt', 'default');">prompt</button><span id="prompt-res"></span>
-  <br>
-  <br>
-  <h2>Test window.history and hash<h2>
-  <button onclick="window.location.hash='shit';">hash='shit'</button></span>
-  <br>
-  <button onclick="window.history.pushState(null, '', 'index.html?action=pushState');">pushState</button></span>
-  <br>
-  <button onclick="window.history.replaceState(null, '', 'index.html?action=replaceState');">replaceState</button></span>
-</body>
+  <head>
+    <style>
+table, th, td {
+}
+th,td {
+  width: 150px
+}
+    </style>
+    <script src='index.js'></script>
+  </head>
+  <body>
+    <h1><a href='index.html'>This is Mrsuyi's test site</a></h1>
+    <a href='img.html'>Images</a>
+    <a href='video.html'>Videos</a>
+    <a href='js.html'>Javascript</a>
+    <br>
+
+    <!--number converter-->
+    <div>
+      <h2>number converter</h2>
+
+      <!--input-->
+      <input id='num' placeholder='input your number' size=40>
+      <input id='ra-bin' name='format' value='bin' type='radio'>
+      <label for='ra-bin'>Binary</label>
+      <input id='ra-dec' name='format' value='dec' type='radio'>
+      <label for='ra-dec'>Decimal</label>
+      <input id='ra-hex' name='format' value='hex' type='radio'>
+      <label for='ra-hex'>Hexadecimal</label>
+      <input id='ra-auto' name='format' value='auto' type='radio' checked>
+      <label for='auto'>Auto-detect</label>
+
+      <!--output-->
+      <br>
+      <span style='color: red' id='sp-num-msg'></span>
+      <br>
+      <table id='tb-output'>
+        <thead>
+          <tr>
+            <th>Binary</th>
+            <th>Decimal</th>
+            <th>Hexadecimal</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td></td><td></td><td></td></tr>
+          <tr><td></td><td></td><td></td></tr>
+          <tr><td></td><td></td><td></td></tr>
+          <tr><td></td><td></td><td></td></tr>
+          <tr><td></td><td></td><td></td></tr>
+          <tr><td></td><td></td><td></td></tr>
+          <tr><td></td><td></td><td></td></tr>
+          <tr><td></td><td></td><td></td></tr>
+        </tbody>
+      </table>
+    </div>
+  </body>
 </html>
