@@ -13,9 +13,8 @@ const onInputNumber = () => {
   let num = document.getElementById('num').value;
 
   if (num === '') {
-    printNumError('number is null');
-  } else {
-    printNumError('');
+    printNumError('Number is null');
+    return;
   }
 
   let regBin = /^\s*(0b|0B)?([01]+)\s*$/g;
@@ -49,6 +48,7 @@ const onInputNumber = () => {
   }
   if (radix == -1) {
     printNumError('Invalid number format');
+    return;
   }
 
   num = parseInt(num, radix);
