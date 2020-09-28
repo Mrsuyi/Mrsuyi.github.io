@@ -21,20 +21,20 @@ const onInputNumber = () => {
 
   let formats;
   if (raAuto.checked) {
-    formats = [[regDec, 10], [regHex, 16], [regBin, 2]];
+    formats = [[regDec, 10, ''], [regHex, 16, '0x'], [regBin, 2, '0b']];
   } else if (raBin.checked) {
-    formats = [[regBin, 2]];
+    formats = [[regBin, 2, '0b']];
   } else if (raDec.checked) {
-    formats = [[regDec, 10]];
+    formats = [[regDec, 10, '']];
   } else if (raHex.checked) {
-    formats = [[regHex, 16]];
+    formats = [[regHex, 16, '0x']];
   }
 
   let radix = -1;
-  for (let [i, [reg, rad]] of formats.entries()) {
+  for (let [i, [reg, rad, prefix]] of formats.entries()) {
     let res = reg.exec(num);
     if (res != null && res[2] != null) {
-      num = res[2];
+      num = prefix + res[2];
       radix = rad;
       break;
     }
@@ -44,11 +44,7 @@ const onInputNumber = () => {
     return;
   }
 
-  num = parseInt(num, radix);
-  if (num == NaN) {
-    printNumError('Invalid number value');
-    return;
-  }
+  num = BigInt(num);
   printNumError('');
   printNumResult(num);
 };
