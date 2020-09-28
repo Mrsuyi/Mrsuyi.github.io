@@ -2,13 +2,6 @@ window.onload = event => {
   document.getElementById('num').addEventListener('input', onInputNumber);
 };
 
-const printNumError = (msg) => {
-  document.getElementById('sp-num-msg').textContent = msg;
-  let cells = document.getElementById('tb-output').getElementsByTagName('td');
-  for (let cell of cells)
-    cell.textContent = '';
-}
-
 const onInputNumber = () => {
   let num = document.getElementById('num').value;
 
@@ -56,10 +49,18 @@ const onInputNumber = () => {
     printNumError('Invalid number value');
     return;
   }
-  printResult(num);
+  printNumError('');
+  printNumResult(num);
 };
 
-const printResult = (num) => {
+const printNumError = (msg) => {
+  document.getElementById('sp-num-msg').textContent = msg;
+  let cells = document.getElementById('tb-output').getElementsByTagName('td');
+  for (let cell of cells)
+    cell.textContent = '';
+}
+
+const printNumResult = (num) => {
   let bin = num.toString(2);
   let dec = num.toString(10);
   let hex = num.toString(16);
