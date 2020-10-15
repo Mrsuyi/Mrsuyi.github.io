@@ -1,9 +1,9 @@
+let numMan = null;
 let cmdMan = null;
 
 window.onload = event => {
-  document.getElementById('num').addEventListener('input', onInputNumber);
+  numMan = new NumManager();
 
-  //window.localStorage.setItem('cmds', null);
   cmdMan = new CmdManager(document.getElementById('cmd-man'));
 
   //let s = '/bin/bash --user_names=abc,1234 --no_diff --key=gdocid select key__,value__ from a.table,b.table envs=dev,dogfood --out_file="a.txt" --silent';
@@ -17,106 +17,149 @@ window.onload = event => {
   //console.log(cmd2.generate());
 };
 
-window.onunload = event => {
+window.onbeforeunload = event => {
+  if (numMan) {
+    numMan.deinit();
+  }
   if (cmdMan) {
     cmdMan.deinit();
   }
 };
 
-//=============================== number converter ===========================//
+//==================================== util ==================================//
 
-const onInputNumber = () => {
-  let num = document.getElementById('num').value;
-
-  if (num === '') {
-    printNumError('Number is null');
-    return;
-  }
-
-  let regBin = /^\s*(0b|0B)?([01]+)\s*$/g;
-  let regDec = /^(\s*)(\d+)\s*$/g;
-  let regHex = /^\s*(0x|0X)?([0-9a-fA-F]+)\s*$/g;
-
-  let raBin = document.getElementById('ra-bin');
-  let raDec = document.getElementById('ra-dec');
-  let raHex = document.getElementById('ra-hex');
-  let raAuto = document.getElementById('ra-auto');
-
-  let formats;
-  if (raAuto.checked) {
-    formats = [[regDec, 10, ''], [regHex, 16, '0x'], [regBin, 2, '0b']];
-  } else if (raBin.checked) {
-    formats = [[regBin, 2, '0b']];
-  } else if (raDec.checked) {
-    formats = [[regDec, 10, '']];
-  } else if (raHex.checked) {
-    formats = [[regHex, 16, '0x']];
-  }
-
-  let radix = -1;
-  for (let [i, [reg, rad, prefix]] of formats.entries()) {
-    let res = reg.exec(num);
-    if (res != null && res[2] != null) {
-      num = prefix + res[2];
-      radix = rad;
-      break;
-    }
-  }
-  if (radix == -1) {
-    printNumError('Invalid number format');
-    return;
-  }
-
-  num = BigInt(num);
-  printNumError('');
-  printNumResult(num);
-};
-
-const printNumError = (msg) => {
-  document.getElementById('sp-num-msg').textContent = msg;
-  let cells = document.getElementById('tb-output').getElementsByTagName('td');
-  for (let cell of cells)
-    cell.textContent = '';
-}
-
-const printNumResult = (num) => {
-  let bin = num.toString(2);
-  let dec = num.toString(10);
-  let hex = num.toString(16);
-
-  let values = [bin, dec, hex];
-  let prefixes = ['0b', '', '0x'];
-
-  let rows = document.getElementById('tb-output').rows;
-  let r = 1;
-  for (let zero_padding of [false, true]) {
-    for (let use_prefix of [false, true]) {
-      for (let upper_case of [false, true]) {
-        for (let [i, value] of values.entries()) {
-          if (zero_padding) {
-            value = '0'.repeat((4 - value.length % 4) % 4) + value;
-          }
-          if (use_prefix) {
-            value = prefixes[i] + value;
-          }
-          if (upper_case) {
-            value = value.toUpperCase();
-          }
-          rows[r].cells[i].textContent = value;
-        }
-        ++r;
-      }
-    }
-  }
-};
-
-//=================================== CMD manager ==============================//
-
-const adjustInputWidth = (input) => {
+const adjustInputWidth = (input, minSize = 8) => {
   let lo = input.value.replaceAll(/[A-Z]/g, '').length;
   let hi = input.value.length - lo;
-  input.size = Math.max(10, lo + hi * 1.5);
+  input.size = Math.max(minSize, lo + hi * 1.5 + 3);
 };
+
+//=============================== number converter ===========================//
+
+class NumManager {
+  constructor() {
+    let json = JSON.parse(window.localStorage.getItem('num-man') ?? '{}');
+
+    this.input = document.getElementById('num');
+    this.input.addEventListener('input', this.onInputNumber.bind(this));
+    this.input.value = json.inputValue ?? '0';
+
+    this.raBin = document.getElementById('ra-bin');
+    this.raBin.addEventListener('change', this.onInputNumber.bind(this));
+    this.raDec = document.getElementById('ra-dec');
+    this.raDec.addEventListener('change', this.onInputNumber.bind(this));
+    this.raHex = document.getElementById('ra-hex');
+    this.raHex.addEventListener('change', this.onInputNumber.bind(this));
+    this.raAuto = document.getElementById('ra-auto');
+    this.raAuto.addEventListener('change', this.onInputNumber.bind(this));
+
+    this.cbAddPrefix = document.getElementById('cb-add-prefix');
+    this.cbAddPrefix.checked = json.addPrefix ?? false;
+    this.cbAddPrefix.addEventListener('change', this.onInputNumber.bind(this));
+
+    this.cbUseUpper = document.getElementById('cb-use-upper');
+    this.cbUseUpper.checked = json.useUpper ?? false;
+    this.cbUseUpper.addEventListener('change', this.onInputNumber.bind(this));
+
+    this.cbFillZero = document.getElementById('cb-fill-zero');
+    this.cbFillZero.checked = json.fillZero ?? false;
+    this.cbFillZero.addEventListener('change', this.onInputNumber.bind(this));
+
+    this.cbFillZero16 = document.getElementById('cb-fill-zero-16');
+    this.cbFillZero16.checked =json.cbFillZero16 ?? false;
+    this.cbFillZero16.addEventListener('change', this.onInputNumber.bind(this));
+
+    this.onInputNumber();
+  }
+
+  deinit() {
+    window.localStorage.setItem('num-man', JSON.stringify({
+      inputValue: this.input.value,
+      addPrefix: this.cbAddPrefix.checked,
+      useUpper: this.cbUseUpper.checked,
+      fillZero: this.cbFillZero.checked,
+      fillZero16: this.cbFillZero16.checked,
+    }));
+  }
+
+  onInputNumber() {
+    let input = document.getElementById('num');
+    adjustInputWidth(input, 40);
+    let num = input.value;
+    if (!num) {
+      this.printNumError('Number is null');
+      return;
+    }
+
+    let regBin = /^\s*(0b|0B)?([01]+)\s*$/g;
+    let regDec = /^(\s*)(\d+)\s*$/g;
+    let regHex = /^\s*(0x|0X)?([0-9a-fA-F]+)\s*$/g;
+
+    let formats;
+    if (this.raAuto.checked) {
+      formats = [[regDec, 10, ''], [regHex, 16, '0x'], [regBin, 2, '0b']];
+    } else if (this.raBin.checked) {
+      formats = [[regBin, 2, '0b']];
+    } else if (this.raDec.checked) {
+      formats = [[regDec, 10, '']];
+    } else if (this.raHex.checked) {
+      formats = [[regHex, 16, '0x']];
+    }
+
+    let radix = -1;
+    for (let [i, [reg, rad, prefix]] of formats.entries()) {
+      let res = reg.exec(num);
+      if (res != null && res[2] != null) {
+        num = prefix + res[2];
+        radix = rad;
+        break;
+      }
+    }
+    if (radix == -1) {
+      this.printNumError('Invalid number format');
+      return;
+    }
+
+    num = BigInt(num);
+    this.printNumError('');
+    this.printNumResult(num);
+  };
+
+  printNumError(msg) {
+    document.getElementById('sp-num-msg').textContent = msg;
+    let cells = document.getElementById('tb-output').getElementsByTagName('td');
+    for (let cell of cells)
+      cell.textContent = '';
+  }
+
+  printNumResult(num) {
+    let bin = num.toString(2);
+    let dec = num.toString(10);
+    let hex = num.toString(16);
+
+    let values = [bin, dec, hex];
+    let prefixes = ['0b', '', '0x'];
+
+    let row = document.getElementById('tb-output').rows[1];
+
+    for (let [i, value] of values.entries()) {
+      if (this.cbFillZero16.checked && value.length < 16) {
+        value = '0'.repeat(16 - value.length) + value;
+      } else if (this.cbFillZero.checked) {
+        value = '0'.repeat((4 - value.length % 4) % 4) + value;
+      }
+      if (this.cbAddPrefix.checked) {
+        value = prefixes[i] + value;
+      }
+      if (this.cbUseUpper.checked) {
+        value = value.toUpperCase();
+      }
+      row.cells[i].textContent = value;
+    }
+  }
+}
+
+//=================================== CMD manager ==============================//
 
 class Option {
   constructor(value, checked) {
@@ -237,7 +280,7 @@ class Arg {
 
     this.input = document.createElement('input');
     this.input.value = this.generateValues();
-    this.input.size = Math.max(10, this.input.value.length);
+    adjustInputWidth(this.input);
     if (this.separator == ' ') {
       this.input.placeholder = 'Plain flags';
     }
@@ -497,21 +540,12 @@ class Cmd {
 class CmdManager {
   constructor(div) {
     this.cmds = [];
-    try {
-      let cmdJsons = JSON.parse(window.localStorage.getItem('cmds'));
-      if (cmdJsons instanceof Array) {
-        for (let cmdJson of cmdJsons) {
-          this.cmds.push(Cmd.fromJsonObj(cmdJson));
-        }
+    let cmdJsons = JSON.parse(window.localStorage.getItem('cmd-man') ?? '{}');
+    if (cmdJsons instanceof Array) {
+      for (let cmdJson of cmdJsons) {
+        this.cmds.push(Cmd.fromJsonObj(cmdJson));
       }
-    } catch (err) {
-      console.error(err);
     }
-    console.log(this.cmds);
-
-    //let s = '/bin/bash --user_names=abc,1234 --key=gdocid select key__,value__ from a.table,b.table envs=dev,dogfood --out_file="a.txt" --silent';
-    //this.cmds.push(Cmd.fromString(s));
-
     this.init(div);
   }
 
@@ -543,7 +577,7 @@ class CmdManager {
   }
 
   deinit() {
-    window.localStorage.setItem('cmds', JSON.stringify(this.cmds));
+    window.localStorage.setItem('cmd-man', JSON.stringify(this.cmds));
   }
 
   onCreateCmd() {
