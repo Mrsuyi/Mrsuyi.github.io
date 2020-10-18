@@ -4,7 +4,7 @@ let cmdMan = null;
 window.onload = event => {
   numMan = new NumManager();
 
-  cmdMan = new CmdManager(document.getElementById('cmd-man'));
+  cmdMan = new CmdManager();
 
   //let s = '/bin/bash --user_names=abc,1234 --no_diff --key=gdocid select key__,value__ from a.table,b.table envs=dev,dogfood --out_file="a.txt" --silent';
   //console.log(s);
@@ -69,16 +69,26 @@ class NumManager {
     this.cbFillZero16.checked =json.cbFillZero16 ?? false;
     this.cbFillZero16.addEventListener('change', this.onInputNumber.bind(this));
 
+    document.getElementById(json.formatRadioId ?? 'ra-auto').checked = true;
+
     this.onInputNumber();
   }
 
   deinit() {
+    let formatRadioId = null;
+    for (let id of ['ra-bin', 'ra-dec', 'ra-hex', 'ra-auto']) {
+      if (document.getElementById(id).checked) {
+        formatRadioId = id;
+        break;
+      }
+    }
     window.localStorage.setItem('num-man', JSON.stringify({
       inputValue: this.input.value,
       addPrefix: this.cbAddPrefix.checked,
       useUpper: this.cbUseUpper.checked,
       fillZero: this.cbFillZero.checked,
       fillZero16: this.cbFillZero16.checked,
+      formatRadioId: formatRadioId,
     }));
   }
 
@@ -538,50 +548,64 @@ class Cmd {
 }
 
 class CmdManager {
-  constructor(div) {
+  constructor() {
     this.cmds = [];
-    let cmdJsons = JSON.parse(window.localStorage.getItem('cmd-man') ?? '{}');
-    if (cmdJsons instanceof Array) {
-      for (let cmdJson of cmdJsons) {
-        this.cmds.push(Cmd.fromJsonObj(cmdJson));
-      }
+    let json = JSON.parse(window.localStorage.getItem('cmd-man') ?? '[]');
+    if (json instanceof Array) {
+      this.cmds = this.createCmdsFromJson(json);
     }
-    this.init(div);
+    this.init();
   }
 
-  init(div) {
-    if (this.div && this.div != div && this.div.parentNode) {
-      this.div.parentNode.removeChild(this.div);
-    }
-    div.innerHTML = '';
-    this.div = div;
-
-    // Draw all cmds.
-    for (let cmd of this.cmds) {
-      let subdiv = document.createElement('div');
-      this.div.appendChild(subdiv);
-      cmd.init(this, subdiv);
-    }
-
-    // Draw an input field.
-    this.input = document.createElement('textarea');
-    this.input.placeholder = 'Input a new cmd';
-    this.input.rows = 4;
-    this.input.cols = 120;
+  init() {
+    this.div = document.getElementById('cmd-man');
+    this.input = document.getElementById('cmd-input');
     this.input.addEventListener('keyup', (event) => {
-      if (event.keyCode == 13)
-        this.onCreateCmd();
+      if (event.keyCode == 13) {
+        let s = this.input.value;
+        try {
+          let json = JSON.parse(s);
+          if (json instanceof Array) {
+            let newCmds = this.createCmdsFromJson(json);
+            this.cmds = this.cmds.concat(newCmds);
+            this.initCmds(newCmds);
+          }
+        } catch (e) {
+          this.addCmdFromString(this.input.value);
+        }
+      }
     });
-    this.div.appendChild(document.createElement('br'));
-    this.div.appendChild(this.input);
+
+    this.exportBtn = document.getElementById('cmd-export');
+    this.exportBtn.addEventListener('click', (event) => {
+      this.input.value = JSON.stringify(this.cmds);
+      this.input.select();
+      document.execCommand('copy');
+    });
+
+    this.initCmds(this.cmds);
   }
 
   deinit() {
     window.localStorage.setItem('cmd-man', JSON.stringify(this.cmds));
   }
 
-  onCreateCmd() {
-    let s = this.input.value;
+  initCmds(cmds) {
+    for (let cmd of cmds) {
+      let subdiv = document.createElement('div');
+      this.div.insertBefore(subdiv, this.input);
+      cmd.init(this, subdiv);
+    }
+  }
+
+  createCmdsFromJson(json) {
+    let res = [];
+    for (let j of json)
+      res.push(Cmd.fromJsonObj(j));
+    return res;
+  }
+
+  addCmdFromString(s) {
     this.input.value = '';
 
     let cmd = Cmd.fromString(s);
@@ -590,10 +614,6 @@ class CmdManager {
       return;
     }
 
-    for (let c of this.cmds) {
-      if (c.merge(cmd))
-        return;
-    }
     this.cmds.push(cmd);
     let subdiv = document.createElement('div');
     this.div.insertBefore(subdiv, this.input);
