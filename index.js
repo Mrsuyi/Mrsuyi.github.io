@@ -6,6 +6,11 @@ window.onload = event => {
 
   cmdMan = new CmdManager();
 
+  //let s = 'play.exe \'squo then-escape-squo\\\'squo /\\ dquo"and-escape-dquo\\\"  end-squo\'ppp plain-var=1\\,2,3  --okr=\'asd\"sd\'asd\"df\"'
+  //console.log(s);
+  //let ts = getTokensFromCmdString(s, ',');
+  //console.log(ts);
+
   //let s = '/bin/bash --user_names=abc,1234 --no_diff --key=gdocid select key__,value__ from a.table,b.table envs=dev,dogfood --out_file="a.txt" --silent';
   //console.log(s);
   //let cmd = Cmd.fromString(s);
@@ -33,6 +38,64 @@ const adjustInputWidth = (input, minSize = 8) => {
   let hi = input.value.length - lo;
   input.size = Math.max(minSize, lo + hi * 1.5 + 3);
 };
+
+const getTokensFromCmdString = (s, sep) => {
+  let tokens = [];
+  for (let i = 0; i < s.length; ) {
+    if (/\s/.test(s[i])) {
+      ++i;
+      continue;
+    }
+    token = ''
+    for (let quo = null; i < s.length; ) {
+      // Quoted inside ' or ".
+      if (quo != null) {
+        if (s[i] == '\\') {
+          token += s.substr(i, 2);
+          i += 2;
+        } else {
+          token += s[i];
+          if (s[i] == quo)
+            quo = null;
+          ++i;
+        }
+        continue;
+      }
+
+      // New quote begin.
+      if (s[i] == '\'' || s[i] == '"') {
+        quo = s[i];
+        token += s[i];
+        ++i;
+        continue;
+      }
+
+      // Escape outside quotes.
+      if (s[i] == '\\') {
+        if (/\s/.test(s[i + 1])) {
+          i += 2;
+          break;
+        }
+        if (s[i + 1] != undefined) {
+          token += s[i + 1];
+          i += 2;
+        }
+        continue;
+      }
+
+      // Token end.
+      if (/\s/.test(s[i]) || s[i] == sep) {
+        ++i;
+        break;
+      }
+
+      token += s[i];
+      ++i;
+    }
+    tokens.push(token);
+  }
+  return tokens;
+}
 
 //=============================== number converter ===========================//
 
@@ -193,36 +256,21 @@ class Option {
     div.innerHTML = '';
     this.div = div;
 
+    // Draw checkbox.
     this.box = document.createElement('input');
     this.box.type = 'checkbox';
     this.box.checked = this.checked;
-    this.box.addEventListener('change', (event) => {
-      this.checked = this.box.checked;
-      let values = this.arg.input.value.split(this.arg.separator).filter(s => s.length > 0);
-      if (this.checked) {
-        if (values.indexOf(this.value) == -1) {
-          values = [this.value].concat(values);
-        }
-      } else {
-        values = values.filter(s => s != this.value);
-      }
-      this.arg.input.value = values.join(this.arg.separator);
-      adjustInputWidth(this.arg.input);
-    });
+    this.box.addEventListener('change', this.onCheckboxChange.bind(this));
+
+    // Draw a span as label for checkbox.
     let span = document.createElement('span');
     span.innerHTML = this.value + ' ';
-    span.addEventListener('click', (event) => {
-      this.box.checked = !this.box.checked;
-      var evt = document.createEvent("HTMLEvents");
-      evt.initEvent("change", false, true);
-      this.box.dispatchEvent(evt);
-    });
+    span.addEventListener('click', this.onLabelClick.bind(this));
+
+    // Draw delete button.
     let deleteBtn = document.createElement('button');
     deleteBtn.innerHTML = 'X';
-    deleteBtn.addEventListener('click', (event) => {
-      div.parentNode.removeChild(div);
-      this.arg.onDeleteOption(this);
-    });
+    deleteBtn.addEventListener('click', this.onDeleteBtnClick.bind(this));
 
     div.appendChild(this.box);
     div.appendChild(span);
@@ -231,6 +279,32 @@ class Option {
 
   static fromJsonObj(obj) {
     return new Option(obj.value, obj.checked);
+  }
+
+  onCheckboxChange(event) {
+    this.checked = this.box.checked;
+    let values = this.arg.getInputValues();
+    if (this.checked) {
+      if (values.indexOf(this.value) == -1) {
+        values = [this.value].concat(values);
+      }
+    } else {
+      values = values.filter(s => s != this.value);
+    }
+    this.arg.input.value = values.join(this.arg.separator);
+    adjustInputWidth(this.arg.input);
+  }
+
+  onLabelClick(event) {
+    this.box.checked = !this.box.checked;
+    var evt = document.createEvent("HTMLEvents");
+    evt.initEvent("change", false, true);
+    this.box.dispatchEvent(evt);
+  }
+
+  onDeleteBtnClick(event) {
+    this.div.parentNode.removeChild(this.div);
+    this.arg.onDeleteOption(this);
   }
 }
 
@@ -273,40 +347,24 @@ class Arg {
 
     this.sharedEditDiv = sharedEditDiv;
 
-    // Draw a label for prefix and an input field for value.
+    // Draw prefix label.
     let label = document.createElement('span');
     label.innerHTML = ' ' + this.prefix;
     if (!this.enabled) {
       label.style = 'color: grey';
     }
-    label.addEventListener('click', (event) => {
-      this.enabled = !this.enabled;
-      if (this.enabled)
-        label.style = '';
-      else
-        label.style = 'color: grey';
-    });
+    label.addEventListener('click', this.onLabelClick.bind(this));
     span.appendChild(label);
 
+    // Draw input field.
     this.input = document.createElement('input');
     this.input.value = this.generateValues();
     adjustInputWidth(this.input);
     if (this.separator == ' ') {
       this.input.placeholder = 'Plain flags';
     }
-    this.input.addEventListener('focus', (event) => {
-      if (!this.editArea.parentNode) {
-        sharedEditDiv.innerHTML = '';
-        sharedEditDiv.appendChild(this.editArea);
-      }
-
-      adjustInputWidth(this.input);
-      let offset = this.input.getBoundingClientRect();
-      this.editArea.style.marginLeft = offset.left;
-    });
-    this.input.addEventListener('keyup', (event) => {
-      adjustInputWidth(this.input);
-    });
+    this.input.addEventListener('focus', this.onInputFocus.bind(this));
+    this.input.addEventListener('keyup', this.onInputKeyup.bind(this));
     span.appendChild(this.input);
 
     // Draw options and a "Delete" button in sharedEditDiv.
@@ -320,13 +378,7 @@ class Arg {
     if (this != this.cmd.flagArg) {
       let deleteBtn = document.createElement('button');
       deleteBtn.innerHTML = 'Delete';
-      deleteBtn.addEventListener('click', (event) => {
-        span.parentNode.removeChild(span);
-        if (sharedEditDiv.firstChild == this.editArea) {
-          sharedEditDiv.innerHTML = '';
-        }
-        this.cmd.onDeleteArg(this);
-      });
+      deleteBtn.addEventListener('click', this.onDeleteBtnClick.bind(this));
       this.editArea.appendChild(deleteBtn);
     }
   }
@@ -346,11 +398,15 @@ class Arg {
     return values.join(this.separator);
   }
 
+  getInputValues() {
+    return getTokensFromCmdString(this.input.value, this.separator);
+  }
+
   generate() {
     console.assert(this.prefix || this.options, "Empty arg");
 
     // Update options based on input field value.
-    let values = this.input.value.split(this.separator).filter(s => s.length > 0);
+    let values = this.getInputValues();
     for (let value of values) {
       let exist = false;
       for (let option of this.options) {
@@ -381,20 +437,48 @@ class Arg {
   static fromString(s) {
     console.assert(s, 'Null string');
 
-    let prefix = '';
-    let suffix = s;
-    let idx = s.indexOf('=');
-    if (idx != -1) {
-      prefix = s.substr(0, idx + 1);
-      suffix = s.substr(idx + 1);
+    let res = new Arg('', [], true, ',');
+    if (/^-{0,2}\w+=/.test(s)) {
+      let idx = s.indexOf('=');
+      res.prefix = s.substr(0, idx + 1);
+      s = s.substr(idx + 1);
     }
-    let values = suffix.split(',').filter(s => s.length > 0);
-    let res = new Arg(prefix, [], true, ',');
-
+    let values = getTokensFromCmdString(s, ',');
     for (const val of values) {
       res.options.push(new Option(val, true));
     }
     return res;
+  }
+
+  onInputFocus = (event) => {
+    if (!this.editArea.parentNode) {
+      this.sharedEditDiv.innerHTML = '';
+      this.sharedEditDiv.appendChild(this.editArea);
+    }
+
+    adjustInputWidth(this.input);
+    let offset = this.input.getBoundingClientRect();
+    this.editArea.style.marginLeft = offset.left;
+  }
+
+  onInputKeyup = (event) => {
+    adjustInputWidth(this.input);
+  }
+
+  onLabelClick = (event) => {
+    this.enabled = !this.enabled;
+    if (this.enabled)
+      label.style = '';
+    else
+      label.style = 'color: grey';
+  }
+
+  onDeleteBtnClick = (event) => {
+    span.parentNode.removeChild(span);
+    if (sharedEditDiv.firstChild == this.editArea) {
+      sharedEditDiv.innerHTML = '';
+    }
+    this.cmd.onDeleteArg(this);
   }
 }
 
@@ -440,10 +524,7 @@ class Cmd {
 
     // Draw a delete button.
     let deleteBtn = document.createElement('button');
-    deleteBtn.addEventListener('click', (event) => {
-      this.div.parentNode.removeChild(this.div);
-      this.man.onDeleteCmd(this);
-    });
+    deleteBtn.addEventListener('click', this.onDeleteBtnClick.bind(this));
     deleteBtn.innerHTML = 'X';
     div.appendChild(deleteBtn);
 
@@ -473,13 +554,7 @@ class Cmd {
     // Draw 'Generate' button.
     let gen = document.createElement('button');
     gen.innerHTML = 'Generate';
-    gen.addEventListener('click', (event) => {
-      let cmdStr = this.generate();
-      let output = this.man.input;
-      output.innerHTML = cmdStr;
-      output.select();
-      document.execCommand('copy');
-    });
+    gen.addEventListener('click', this.onGenBtnClick.bind(this));
     div.appendChild(document.createTextNode(' '));
     div.appendChild(gen);
 
@@ -502,12 +577,6 @@ class Cmd {
     console.error('Did not find arg', arg);
   }
 
-  // Tries to merge with another Cmd. Returns if succeeded.
-  merge(cmd) {
-    if (cmd.exe != this.exe)
-      return false;
-  }
-
   generate() {
     let res = [this.exe];
     for (const arg of this.orderedArgs)
@@ -523,7 +592,7 @@ class Cmd {
   static fromString(s) {
     console.assert(s, 'input string is null');
 
-    let tokens = s.split(/\s/).filter(s => s.length > 0);
+    let tokens = getTokensFromCmdString(s);
     if (tokens.length == 0)
       return null;
 
@@ -535,15 +604,29 @@ class Cmd {
         continue;
 
       if (token.substr(0, 2) == '--') {
-        if (token.indexOf('=') == -1)
-          res.flagArg.options.push(new Option(token, /* checked */true));
-        else
+        if (/^--\w+=/.test(token)) {
           res.unorderedArgs.push(Arg.fromString(token));
+        } else {
+          res.flagArg.options.push(new Option(token, /* checked */true));
+        }
       } else {
         res.orderedArgs.push(Arg.fromString(token));
       }
     }
     return res;
+  }
+
+  onDeleteBtnClick(event) {
+    this.div.parentNode.removeChild(this.div);
+    this.man.onDeleteCmd(this);
+  }
+
+  onGenBtnClick(event) {
+    let cmdStr = this.generate();
+    let output = this.man.input;
+    output.innerHTML = cmdStr;
+    output.select();
+    document.execCommand('copy');
   }
 }
 
@@ -560,28 +643,9 @@ class CmdManager {
   init() {
     this.div = document.getElementById('cmd-man');
     this.input = document.getElementById('cmd-input');
-    this.input.addEventListener('keyup', (event) => {
-      if (event.keyCode == 13) {
-        let s = this.input.value;
-        try {
-          let json = JSON.parse(s);
-          if (json instanceof Array) {
-            let newCmds = this.createCmdsFromJson(json);
-            this.cmds = this.cmds.concat(newCmds);
-            this.initCmds(newCmds);
-          }
-        } catch (e) {
-          this.addCmdFromString(this.input.value);
-        }
-      }
-    });
-
+    this.input.addEventListener('keyup', this.onInputKeyup.bind(this));
     this.exportBtn = document.getElementById('cmd-export');
-    this.exportBtn.addEventListener('click', (event) => {
-      this.input.value = JSON.stringify(this.cmds);
-      this.input.select();
-      document.execCommand('copy');
-    });
+    this.exportBtn.addEventListener('click', this.onExportBtnClick.bind(this));
 
     this.initCmds(this.cmds);
   }
@@ -618,6 +682,28 @@ class CmdManager {
     let subdiv = document.createElement('div');
     this.div.insertBefore(subdiv, this.input);
     cmd.init(this, subdiv);
+  }
+
+  onInputKeyup(event) {
+    if (event.keyCode == 13) {
+      let s = this.input.value;
+      try {
+        let json = JSON.parse(s);
+        if (json instanceof Array) {
+          let newCmds = this.createCmdsFromJson(json);
+          this.cmds = this.cmds.concat(newCmds);
+          this.initCmds(newCmds);
+        }
+      } catch (e) {
+        this.addCmdFromString(this.input.value);
+      }
+    }
+  }
+
+  onExportBtnClick(event) {
+    this.input.value = JSON.stringify(this.cmds);
+    this.input.select();
+    document.execCommand('copy');
   }
 
   onDeleteCmd(cmd) {
