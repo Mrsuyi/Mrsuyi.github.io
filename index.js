@@ -348,13 +348,11 @@ class Arg {
     this.sharedEditDiv = sharedEditDiv;
 
     // Draw prefix label.
-    let label = document.createElement('span');
-    label.innerHTML = ' ' + this.prefix;
-    if (!this.enabled) {
-      label.style = 'color: grey';
-    }
-    label.addEventListener('click', this.onLabelClick.bind(this));
-    span.appendChild(label);
+    this.label = document.createElement('span');
+    this.label.innerHTML = ' ' + this.prefix;
+    this.label.style = this.enabled ? '' : 'color: grey';
+    this.label.addEventListener('click', this.onLabelClick.bind(this));
+    span.appendChild(this.label);
 
     // Draw input field.
     this.input = document.createElement('input');
@@ -468,9 +466,9 @@ class Arg {
   onLabelClick = (event) => {
     this.enabled = !this.enabled;
     if (this.enabled)
-      label.style = '';
+      this.label.style = '';
     else
-      label.style = 'color: grey';
+      this.label.style = 'color: grey';
   }
 
   onDeleteBtnClick = (event) => {
