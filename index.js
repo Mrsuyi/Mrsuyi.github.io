@@ -622,7 +622,7 @@ class Cmd {
   onGenBtnClick(event) {
     let cmdStr = this.generate();
     let output = this.man.input;
-    output.innerHTML = cmdStr;
+    output.value = cmdStr;
     output.select();
     document.execCommand('copy');
   }
