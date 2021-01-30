@@ -158,7 +158,7 @@ class NumManager {
   onInputNumber() {
     let input = document.getElementById('num');
     adjustInputWidth(input, 40);
-    let num = input.value;
+    let num = input.value.replaceAll(/(\s)+/g, '');
     if (!num) {
       this.printNumError('Number is null');
       return;
